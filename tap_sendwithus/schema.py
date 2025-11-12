@@ -1,8 +1,10 @@
-import os
 import json
-import singer
+import os
 from typing import Dict, Tuple
+
+import singer
 from singer import metadata
+
 from tap_sendwithus.streams import STREAMS
 
 LOGGER = singer.get_logger()
@@ -69,8 +71,11 @@ def get_schemas() -> Tuple[Dict, Dict]:
                     mdata, ("properties", field_name), "inclusion", "automatic"
                 )
 
+        parent_tap_stream_id = getattr(stream_obj, "parent", None)
+        if parent_tap_stream_id:
+            mdata = metadata.write(mdata, (), 'parent-tap-stream-id', parent_tap_stream_id)
+
         mdata = metadata.to_list(mdata)
         field_metadata[stream_name] = mdata
 
     return schemas, field_metadata
-

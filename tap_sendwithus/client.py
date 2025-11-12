@@ -3,13 +3,16 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 import backoff
 import requests
 from requests import session
-from requests.exceptions import Timeout, ConnectionError, ChunkedEncodingError
+from requests.exceptions import ChunkedEncodingError, ConnectionError, Timeout
 from singer import get_logger, metrics
 
-from tap_sendwithus.exceptions import ERROR_CODE_EXCEPTION_MAPPING, sendwithusError, sendwithusBackoffError
+from tap_sendwithus.exceptions import (ERROR_CODE_EXCEPTION_MAPPING,
+                                       SendwithusBackoffError, SendwithusError,
+                                       SendwithusRateLimitError)
 
 LOGGER = get_logger()
 REQUEST_TIMEOUT = 300
+
 
 def raise_for_error(response: requests.Response) -> None:
     """Raises the associated response exception. Takes in a response object,
@@ -31,9 +34,10 @@ def raise_for_error(response: requests.Response) -> None:
             ).get("message", "Unknown Error")
             message = f"HTTP-error-code: {response.status_code}, Error: {response_json.get('message', error_message)}"
         exc = ERROR_CODE_EXCEPTION_MAPPING.get(response.status_code, {}).get(
-            "raise_exception", sendwithusError
+            "raise_exception", SendwithusError
         )
         raise exc(message, response) from None
+
 
 class Client:
     """
@@ -60,7 +64,14 @@ class Client:
         self._session.close()
 
     def check_api_credentials(self) -> None:
-        pass
+        LOGGER.info("Checking API credentials")
+
+        endpoint = f"{self.base_url}/snippets"
+
+        headers = {"Content-Type": "application/json"}
+        self.make_request(method="GET", endpoint=endpoint, headers=headers)
+
+        LOGGER.info("API credentials are valid")
 
     def authenticate(self, headers: Dict, params: Dict) -> Tuple[Dict, Dict]:
         """Authenticates the request with the token"""
@@ -101,7 +112,8 @@ class Client:
             ConnectionError,
             ChunkedEncodingError,
             Timeout,
-            sendwithusBackoffError
+            SendwithusBackoffError,
+            SendwithusRateLimitError
         ),
         max_tries=5,
         factor=2,
@@ -121,4 +133,3 @@ class Client:
                 raise ValueError(f"Unsupported method: {method}")
 
         return response.json()
-

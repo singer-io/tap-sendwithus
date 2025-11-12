@@ -1,1 +1,30 @@
-{}
+{
+    "type": "object",
+    "properties": {
+        "object": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "created": {
+            "type": [
+                "null",
+                "string"
+            ],
+            "format": "date-time"
+        },
+        "type": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "message": {
+            "type": [
+                "null",
+                "string"
+            ]
+        }
+    }
+}

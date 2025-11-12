@@ -84,11 +84,11 @@ class TestClient(unittest.TestCase):
         mock_make_request.assert_called_once()
 
     @parameterized.expand([
-        ["400 error", 400, MockResponse(400), sendwithusBadRequestError, "A validation exception has occurred."],
-        ["401 error", 401, MockResponse(401), sendwithusUnauthorizedError, "The access token provided is expired, revoked, malformed or invalid for other reasons."],
-        ["403 error", 403, MockResponse(403), sendwithusForbiddenError, "You are missing the following required scopes: read"],
-        ["404 error", 404, MockResponse(404), sendwithusNotFoundError, "The resource you have specified cannot be found."],
-        ["409 error", 409, MockResponse(409), sendwithusConflictError, "The API request cannot be completed because the requested operation would conflict with an existing item."],
+        ["400 error", 400, MockResponse(400), SendwithusBadRequestError, "A validation exception has occurred."],
+        ["401 error", 401, MockResponse(401), SendwithusUnauthorizedError, "The access token provided is expired, revoked, malformed or invalid for other reasons."],
+        ["403 error", 403, MockResponse(403), SendwithusForbiddenError, "You are missing the following required scopes: read"],
+        ["404 error", 404, MockResponse(404), SendwithusNotFoundError, "The resource you have specified cannot be found."],
+        ["409 error", 409, MockResponse(409), SendwithusConflictError, "The API request cannot be completed because the requested operation would conflict with an existing item."],
     ])
     def test_make_request_http_failure_without_retry(self, test_name, error_code, mock_response, error, error_message):
         
@@ -100,12 +100,12 @@ class TestClient(unittest.TestCase):
         self.assertEqual(str(e.exception), expected_error_message)
 
     @parameterized.expand([
-        ["422 error", 422, MockResponse(422), sendwithusUnprocessableEntityError, "The request content itself is not processable by the server."],
-        ["429 error", 429, MockResponse(429), sendwithusRateLimitError, "The API rate limit for your organisation/application pairing has been exceeded."],
-        ["500 error", 500, MockResponse(500), sendwithusInternalServerError, "The server encountered an unexpected condition which prevented it from fulfilling the request."],
-        ["501 error", 501, MockResponse(501), sendwithusNotImplementedError, "The server does not support the functionality required to fulfill the request."],
-        ["502 error", 502, MockResponse(502), sendwithusBadGatewayError, "Server received an invalid response."],
-        ["503 error", 503, MockResponse(503), sendwithusServiceUnavailableError, "API service is currently unavailable."],
+        ["422 error", 422, MockResponse(422), SendwithusUnprocessableEntityError, "The request content itself is not processable by the server."],
+        ["429 error", 429, MockResponse(429), SendwithusRateLimitError, "The API rate limit for your organisation/application pairing has been exceeded."],
+        ["500 error", 500, MockResponse(500), SendwithusInternalServerError, "The server encountered an unexpected condition which prevented it from fulfilling the request."],
+        ["501 error", 501, MockResponse(501), SendwithusNotImplementedError, "The server does not support the functionality required to fulfill the request."],
+        ["502 error", 502, MockResponse(502), SendwithusBadGatewayError, "Server received an invalid response."],
+        ["503 error", 503, MockResponse(503), SendwithusServiceUnavailableError, "API service is currently unavailable."],
     ])
     @patch("time.sleep")
     def test_make_request_http_failure_with_retry(self, test_name, error_code, mock_response, error, error_message, mock_sleep):

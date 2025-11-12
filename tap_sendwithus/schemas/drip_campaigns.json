@@ -1,1 +1,70 @@
-{}
+{
+    "type": "object",
+    "properties": {
+        "object": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "id": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "name": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "enabled": {
+            "type": [
+                "null",
+                "boolean"
+            ]
+        },
+        "trigger_email_id": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "drip_steps": {
+            "type": [
+                "null",
+                "array"
+            ],
+            "items": {
+                "type": "object",
+                "properties": {
+                    "object": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "id": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "email_id": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "delay_seconds": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
