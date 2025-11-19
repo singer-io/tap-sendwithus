@@ -37,7 +37,7 @@ class SendwithusConflictError(SendwithusError):
     pass
 
 
-class SendwithusUnprocessableEntityError(SendwithusBackoffError):
+class SendwithusUnprocessableEntityError(SendwithusError):
     """class representing 422 status code."""
     pass
 

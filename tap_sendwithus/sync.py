@@ -1,7 +1,9 @@
-import singer
 from typing import Dict
-from tap_sendwithus.streams import STREAMS
+
+import singer
+
 from tap_sendwithus.client import Client
+from tap_sendwithus.streams import STREAMS
 
 LOGGER = singer.get_logger()
 
@@ -64,4 +66,3 @@ def sync(client: Client, config: Dict, catalog: singer.Catalog, state) -> None:
                     stream_name, total_records
                 )
             )
-
