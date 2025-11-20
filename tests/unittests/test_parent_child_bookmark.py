@@ -1,6 +1,8 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from tap_sendwithus.streams.abstracts import ParentBaseStream
+
 
 class ConcreteParentBaseStream(ParentBaseStream):
     @property
@@ -18,6 +20,7 @@ class ConcreteParentBaseStream(ParentBaseStream):
     @property
     def tap_stream_id(self):
         return "parent_stream"
+
 
 class TestSync(unittest.TestCase):
     @patch("tap_sendwithus.streams.abstracts.metadata.to_map")
@@ -41,7 +44,7 @@ class TestSync(unittest.TestCase):
         self.assertEqual(result, 100)
 
     @patch("tap_sendwithus.streams.abstracts.BaseStream.is_selected", return_value=False)
-    @patch("tap_sendwithus.streams.abstracts.IncrementalStream.get_bookmark", return_value = 100)
+    @patch("tap_sendwithus.streams.abstracts.IncrementalStream.get_bookmark", return_value=100)
     def test_get_bookmark_parent_only_but_not_selected(self, mock_get_bookmark, mock_is_selected):
 
         state = {}
@@ -49,7 +52,7 @@ class TestSync(unittest.TestCase):
         self.assertEqual(result, None)
 
     @patch("tap_sendwithus.streams.abstracts.BaseStream.is_selected", return_value=True)
-    @patch("tap_sendwithus.streams.abstracts.IncrementalStream.get_bookmark", side_effect = [100, 50, 75])
+    @patch("tap_sendwithus.streams.abstracts.IncrementalStream.get_bookmark", side_effect=[100, 50, 75])
     def test_get_bookmark_with_children(self, mock_get_bookmark, mock_is_selected):
 
         child1 = MagicMock()
@@ -69,10 +72,10 @@ class TestSync(unittest.TestCase):
         mock_get_bookmark.assert_any_call(
             state, "child_stream_2", key="parent_stream_updated_at"
         )
-        self.assertEqual(result, 50) 
+        self.assertEqual(result, 50)
 
     @patch("tap_sendwithus.streams.abstracts.BaseStream.is_selected", return_value=False)
-    @patch("tap_sendwithus.streams.abstracts.IncrementalStream.get_bookmark", side_effect = [75, 50])
+    @patch("tap_sendwithus.streams.abstracts.IncrementalStream.get_bookmark", side_effect=[75, 50])
     def test_get_bookmark_only_children_selected(self, mock_get_bookmark, mock_is_selected):
 
         child1 = MagicMock()
