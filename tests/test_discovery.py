@@ -56,5 +56,5 @@ class SendwithusDiscoveryTest(DiscoveryTest, SendwithusBaseTest):
                 # verify actual parent stream match expected
                 with self.subTest(msg="validating parent tap stream id"):
                     self.assertEqual(expected_parent_tap_stream_id, actual_parent_tap_stream_id,
-                                        logging=f"verify {expected_parent_tap_stream_id} "
+                                        msg=f"verify {expected_parent_tap_stream_id} "
                                                 f"is saved in metadata as a parent-tap-stream-id")

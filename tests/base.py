@@ -43,7 +43,7 @@ class SendwithusBaseTest(BaseCase):
                 cls.PARENT_TAP_STREAM_ID: None
             },
             "log_events": {
-                cls.PRIMARY_KEYS: {"status", "created"},
+                cls.PRIMARY_KEYS: {"log_id", "status", "created"},
                 cls.REPLICATION_METHOD: cls.INCREMENTAL,
                 cls.REPLICATION_KEYS: {"created"},
                 cls.OBEYS_START_DATE: False,

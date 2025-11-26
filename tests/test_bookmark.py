@@ -27,10 +27,13 @@ class SendwithusBookMarkTest(BookmarkTest, SendwithusBaseTest):
         """Calculates new bookmarks by looking through sync 1 data to determine
         a bookmark that will sync 2 records in sync 2 (plus any necessary look
         back data)"""
+        # NOTE: The timestamps for logs and log_events needs to be updated since the test data will get deleted after 7 days.
+        # If the test fails, create new logs and log_events by using the script `generate-logs-data.py` present in spikes
+
         new_bookmarks = {
             "templates": {"created": "2025-11-11T00:00:00Z"},
-            "logs": {"created": "2025-11-18T00:00:00Z"},
-            "log_events": {"created": "2025-11-18T00:00:00Z"},
+            "logs": {"created": "2025-11-24T07:09:00Z"},
+            "log_events": {"created": "2025-11-24T07:09:00Z"},
             "snippets": {"modified": "2025-11-11T06:25:22Z"},
         }
 

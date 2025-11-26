@@ -7,7 +7,8 @@ class SendwithusStartDateTest(StartDateTest, SendwithusBaseTest):
     test."""
 
     # Note: Start date test may fail for logs and log_events as the sendwithus Account has 7 day data retention policy(free version).
-    # User may need to regenerate data within the retention period to have consistent test results.
+    # User may need to regenerate data within the retention period to have consistent test results using `generate-logs-data.py` present in spikes.
+    # Also create new templates and snippets with created/modified date after start_date_2 to have data for both syncs.
 
     @staticmethod
     def name():
@@ -23,4 +24,4 @@ class SendwithusStartDateTest(StartDateTest, SendwithusBaseTest):
 
     @property
     def start_date_2(self):
-        return "2025-11-18T00:00:00Z"
+        return "2025-11-25T00:00:00Z"
