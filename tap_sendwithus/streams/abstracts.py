@@ -231,6 +231,10 @@ class IncrementalStream(BaseStream):
                     if isinstance(item, dict):
                         self.modify_object(item, datetime_fields=datetime_fields)
 
+        if self.tap_stream_id == "log_events" and parent_record:
+            # Add parent log_id to the child log_events record
+            record["log_id"] = parent_record.get("id")
+
     def sync(
         self,
         state: Dict,
