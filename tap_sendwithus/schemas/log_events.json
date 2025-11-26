@@ -1,6 +1,12 @@
 {
     "type": "object",
     "properties": {
+        "log_id": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
         "object": {
             "type": [
                 "null",
