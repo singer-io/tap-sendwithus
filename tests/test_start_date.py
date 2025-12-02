@@ -1,5 +1,6 @@
 from base import SendwithusBaseTest
 from tap_tester.base_suite_tests.start_date_test import StartDateTest
+from datetime import datetime, timedelta, timezone
 
 
 class SendwithusStartDateTest(StartDateTest, SendwithusBaseTest):
@@ -24,4 +25,7 @@ class SendwithusStartDateTest(StartDateTest, SendwithusBaseTest):
 
     @property
     def start_date_2(self):
-        return "2025-11-25T00:00:00Z"
+        delta = timedelta(days=1)
+        now_minus_1_day = (datetime.now(tz=timezone.utc) - delta).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+        return now_minus_1_day

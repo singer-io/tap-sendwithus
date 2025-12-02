@@ -1,5 +1,6 @@
 from base import SendwithusBaseTest
 from tap_tester.base_suite_tests.bookmark_test import BookmarkTest
+from datetime import datetime, timedelta, timezone
 
 
 class SendwithusBookMarkTest(BookmarkTest, SendwithusBaseTest):
@@ -30,10 +31,13 @@ class SendwithusBookMarkTest(BookmarkTest, SendwithusBaseTest):
         # NOTE: The timestamps for logs and log_events needs to be updated since the test data will get deleted after 7 days.
         # If the test fails, create new logs and log_events by using the script `generate-logs-data.py` present in spikes
 
+        delta = timedelta(days=1)
+        now_minus_1_day = (datetime.now(tz=timezone.utc) - delta).isoformat(timespec="seconds").replace("+00:00", "Z")
+
         new_bookmarks = {
             "templates": {"created": "2025-11-11T00:00:00Z"},
-            "logs": {"created": "2025-11-24T07:09:00Z"},
-            "log_events": {"created": "2025-11-24T07:09:00Z"},
+            "logs": {"created": now_minus_1_day},
+            "log_events": {"created": now_minus_1_day},
             "snippets": {"modified": "2025-11-11T06:25:22Z"},
         }
 
