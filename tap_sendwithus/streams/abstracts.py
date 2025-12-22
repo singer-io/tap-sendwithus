@@ -5,8 +5,7 @@ from typing import Any, Dict, Iterator, List, Tuple
 from singer import (Transformer, get_bookmark, get_logger, metadata, metrics,
                     write_bookmark, write_record, write_schema)
 
-from tap_sendwithus.utils import (get_datetime_fields_from_schema,
-                                  get_datetime_from_timestamp,
+from tap_sendwithus.utils import (get_datetime_from_timestamp,
                                   get_timestamp_from_datetime,
                                   sort_records_by_replication_key)
 
@@ -199,37 +198,13 @@ class IncrementalStream(BaseStream):
 
         yield from raw_records
 
-    def modify_object(self, record, parent_record=None, datetime_fields: set = None):
-        """ Modify the record's datetime fields before writing to the stream
+    def modify_object(self, record, parent_record=None):
+        """ Modify the record before writing to the stream
 
         Args:
             record (Dict): The record to modify
             parent_record (Dict, optional): The parent record. Defaults to None.
-            datetime_fields (Set[str], optional): The set of datetime fields. Defaults to None.
         """
-        if datetime_fields is None:
-            datetime_fields = set()
-
-        # Iterate on the record and convert datetime fields to standard format
-        for field, value in record.items():
-            if field in datetime_fields and value is not None:
-                # Convert to standard datetime format
-                try:
-                    standardized_datetime = get_datetime_from_timestamp(value)
-                    record[field] = standardized_datetime
-                except Exception as e:
-                    LOGGER.error("Error converting field {} with value {}: {}".format(field, value, str(e)))
-                    record[field] = value  # Keep original value if conversion fails
-
-            elif isinstance(value, dict):
-                # Nested object, process recursively
-                self.modify_object(value, datetime_fields=datetime_fields)
-
-            elif isinstance(value, list):
-                # List of items, process each item
-                for item in value:
-                    if isinstance(item, dict):
-                        self.modify_object(item, datetime_fields=datetime_fields)
 
         if self.tap_stream_id == "log_events" and parent_record:
             # Add parent log_id to the child log_events record
@@ -250,12 +225,9 @@ class IncrementalStream(BaseStream):
         self.update_data_payload(parent_obj=parent_obj)
         self.url_endpoint = self.get_url_endpoint(parent_obj)
 
-        # Get all the datetime fields from the schema
-        datetime_fields = get_datetime_fields_from_schema(self.schema)
-
         with metrics.record_counter(self.tap_stream_id) as counter:
             for record in self.get_records():
-                self.modify_object(record, parent_obj, datetime_fields=datetime_fields)
+                self.modify_object(record, parent_obj)
                 transformed_record = transformer.transform(
                     record, self.schema, self.metadata
                 )
