@@ -72,7 +72,7 @@ class SendwithusBaseTest(BaseCase):
     def get_credentials():
         """Authentication information for the test account."""
         credentials_dict = {}
-        creds = {'api_key': 'SENDWITHUS_API_KEY'}
+        creds = {'api_key': 'TAP_SENDWITHUS_API_KEY'}
 
         for cred in creds:
             credentials_dict[cred] = os.getenv(creds[cred])
