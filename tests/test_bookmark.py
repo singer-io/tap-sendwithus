@@ -6,13 +6,13 @@ from datetime import datetime, timedelta, timezone
 class SendwithusBookMarkTest(BookmarkTest, SendwithusBaseTest):
     """Test tap sets a bookmark and respects it for the next sync of a
     stream."""
-    bookmark_format = "%Y-%m-%dT%H:%M:%SZ"
+    bookmark_format = "%Y-%m-%dT%H:%M:%S.%fZ"
     initial_bookmarks = {
         "bookmarks": {
-            "templates": {"created": "2020-01-01T00:00:00Z"},
-            "logs": {"created": "2020-01-01T00:00:00Z"},
-            "log_events": {"created": "2020-01-01T00:00:00Z"},
-            "snippets": {"modified": "2020-01-01T00:00:00Z"},
+            "templates": {"created": "2020-01-01T00:00:00.000000Z"},
+            "logs": {"created": "2020-01-01T00:00:00.000000Z"},
+            "log_events": {"created": "2020-01-01T00:00:00.000000Z"},
+            "snippets": {"modified": "2020-01-01T00:00:00.000000Z"},
         }
     }
 
@@ -32,13 +32,13 @@ class SendwithusBookMarkTest(BookmarkTest, SendwithusBaseTest):
         # If the test fails, create new logs and log_events by using the script `generate-logs-data.py` present in spikes
 
         delta = timedelta(hours=12)
-        now_minus_1_day = (datetime.now(tz=timezone.utc) - delta).isoformat(timespec="seconds").replace("+00:00", "Z")
+        now_minus_1_day = (datetime.now(tz=timezone.utc) - delta).isoformat().replace("+00:00", "Z")
 
         new_bookmarks = {
-            "templates": {"created": "2025-11-11T00:00:00Z"},
+            "templates": {"created": "2025-11-11T00:00:00.000000Z"},
             "logs": {"created": now_minus_1_day},
             "log_events": {"created": now_minus_1_day},
-            "snippets": {"modified": "2025-11-11T06:25:22Z"},
+            "snippets": {"modified": "2025-11-11T06:25:22.000000Z"},
         }
 
         return new_bookmarks

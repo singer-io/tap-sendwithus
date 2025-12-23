@@ -21,11 +21,11 @@ class SendwithusStartDateTest(StartDateTest, SendwithusBaseTest):
 
     @property
     def start_date_1(self):
-        return "2015-03-25T00:00:00Z"
+        return "2015-03-25T00:00:00.000000Z"
 
     @property
     def start_date_2(self):
         delta = timedelta(hours=12)
-        now_minus_1_day = (datetime.now(tz=timezone.utc) - delta).isoformat(timespec="seconds").replace("+00:00", "Z")
+        now_minus_1_day = (datetime.now(tz=timezone.utc) - delta).isoformat().replace("+00:00", "Z")
 
         return now_minus_1_day
