@@ -1,6 +1,8 @@
-import sys
 import json
+import sys
+
 import singer
+
 from tap_sendwithus.client import Client
 from tap_sendwithus.discover import discover
 from tap_sendwithus.sync import sync
@@ -8,6 +10,7 @@ from tap_sendwithus.sync import sync
 LOGGER = singer.get_logger()
 
 REQUIRED_CONFIG_KEYS = ['api_key', 'start_date']
+
 
 def do_discover():
     """
@@ -42,4 +45,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

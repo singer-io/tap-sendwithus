@@ -1,5 +1,6 @@
 from tap_sendwithus.streams.abstracts import ParentBaseStream
 
+
 class Logs(ParentBaseStream):
     tap_stream_id = "logs"
     key_properties = ["id"]
@@ -7,4 +8,4 @@ class Logs(ParentBaseStream):
     replication_keys = ["created"]
     path = "logs"
     children = ["log_events"]
-
+    http_method = "GET"

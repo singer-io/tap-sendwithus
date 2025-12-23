@@ -1,7 +1,10 @@
-import singer
 from typing import Dict
-from tap_sendwithus.streams import STREAMS
+
+import singer
+from singer.transform import UNIX_SECONDS_INTEGER_DATETIME_PARSING
+
 from tap_sendwithus.client import Client
+from tap_sendwithus.streams import STREAMS
 
 LOGGER = singer.get_logger()
 
@@ -44,7 +47,7 @@ def sync(client: Client, config: Dict, catalog: singer.Catalog, state) -> None:
     last_stream = singer.get_currently_syncing(state)
     LOGGER.info("last/currently syncing stream: {}".format(last_stream))
 
-    with singer.Transformer() as transformer:
+    with singer.Transformer(integer_datetime_fmt=UNIX_SECONDS_INTEGER_DATETIME_PARSING) as transformer:
         for stream_name in streams_to_sync:
 
             stream = STREAMS[stream_name](client, catalog.get_stream(stream_name))
@@ -64,4 +67,3 @@ def sync(client: Client, config: Dict, catalog: singer.Catalog, state) -> None:
                     stream_name, total_records
                 )
             )
-

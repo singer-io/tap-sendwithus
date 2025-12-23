@@ -1,16 +1,12 @@
-from abc import ABC, abstractmethod
 import json
-from typing import Any, Dict, Tuple, List, Iterator
-from singer import (
-    Transformer,
-    get_bookmark,
-    get_logger,
-    metrics,
-    write_bookmark,
-    write_record,
-    write_schema,
-    metadata
-)
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Iterator, List, Tuple
+
+from singer import (Transformer, get_bookmark, get_logger, metadata, metrics,
+                    write_bookmark, write_record, write_schema)
+from singer.transform import unix_seconds_to_datetime
+
+from tap_sendwithus.utils import get_timestamp_from_datetime
 
 LOGGER = get_logger()
 
@@ -96,7 +92,6 @@ class BaseStream(ABC):
          - https://github.com/singer-io/getting-started/blob/master/docs/SYNC_MODE.md
         """
 
-
     def get_records(self) -> Iterator:
         """Interacts with api client interaction and pagination."""
         self.params[""] = self.page_size
@@ -156,7 +151,6 @@ class BaseStream(ABC):
 class IncrementalStream(BaseStream):
     """Base Class for Incremental Stream."""
 
-
     def get_bookmark(self, state: dict, stream: str, key: Any = None) -> int:
         """A wrapper for singer.get_bookmark to deal with compatibility for
         bookmark values or start values."""
@@ -179,6 +173,37 @@ class IncrementalStream(BaseStream):
             state, stream, key or self.replication_keys[0], value
         )
 
+    def get_records(self) -> Iterator:
+        """Interacts with api client interaction"""
+
+        response = self.client.make_request(
+            self.http_method,
+            self.url_endpoint,
+            self.params,
+            self.headers,
+            body=json.dumps(self.data_payload),
+            path=self.path
+        )
+        if isinstance(response, dict):
+            raw_records = response.get("data", [response])
+        else:
+            raw_records = response
+
+        LOGGER.info("Fetched {} records for stream {}".format(len(raw_records), self.tap_stream_id))
+
+        yield from raw_records
+
+    def modify_object(self, record, parent_record=None):
+        """ Modify the record before writing to the stream
+
+        Args:
+            record (Dict): The record to modify
+            parent_record (Dict, optional): The parent record. Defaults to None.
+        """
+
+        if self.tap_stream_id == "log_events" and parent_record:
+            # Add parent log_id to the child log_events record
+            record["log_id"] = parent_record.get("id")
 
     def sync(
         self,
@@ -188,31 +213,35 @@ class IncrementalStream(BaseStream):
     ) -> Dict:
         """Implementation for `type: Incremental` stream."""
         bookmark_date = self.get_bookmark(state, self.tap_stream_id)
-        current_max_bookmark_date = bookmark_date
+        current_max_bookmark_ts = bookmark_ts = get_timestamp_from_datetime(date_str=bookmark_date)
+
         self.update_params(updated_since=bookmark_date)
-        self.update_data_payload(parent_obj)
+        self.update_data_payload(parent_obj=parent_obj)
         self.url_endpoint = self.get_url_endpoint(parent_obj)
 
         with metrics.record_counter(self.tap_stream_id) as counter:
             for record in self.get_records():
-                record = self.modify_object(record, parent_obj)
+                self.modify_object(record, parent_obj)
+
+                record_bookmark_ts = record[self.replication_keys[0]]
+
                 transformed_record = transformer.transform(
                     record, self.schema, self.metadata
                 )
 
-                record_bookmark = transformed_record[self.replication_keys[0]]
-                if record_bookmark >= bookmark_date:
+                if record_bookmark_ts >= bookmark_ts:
                     if self.is_selected():
                         write_record(self.tap_stream_id, transformed_record)
                         counter.increment()
 
-                    current_max_bookmark_date = max(
-                        current_max_bookmark_date, record_bookmark
+                    current_max_bookmark_ts = max(
+                        current_max_bookmark_ts, record_bookmark_ts
                     )
 
                     for child in self.child_to_sync:
                         child.sync(state=state, transformer=transformer, parent_obj=record)
 
+            current_max_bookmark_date = unix_seconds_to_datetime(current_max_bookmark_ts)
             state = self.write_bookmark(state, self.tap_stream_id, value=current_max_bookmark_date)
             return counter.value
 
@@ -222,6 +251,33 @@ class FullTableStream(BaseStream):
 
     replication_keys = []
 
+    def get_records(self):
+        response = self.client.make_request(
+            self.http_method,
+            self.url_endpoint,
+            self.params,
+            self.headers,
+            body=json.dumps(self.data_payload),
+            path=self.path
+        )
+
+        if isinstance(response, dict):
+            raw_records = [response]
+
+        elif isinstance(response, list):
+            raw_records = response
+
+        elif response is None:
+            raw_records = []
+
+        else:
+            LOGGER.warning(f"Unexpected response type: {type(response)} in {self.__class__.__name__}.get_records")
+            raw_records = []
+
+        LOGGER.info("Fetched {} records for stream {}".format(len(raw_records), self.tap_stream_id))
+
+        yield from raw_records
+
     def sync(
         self,
         state: Dict,
@@ -230,7 +286,7 @@ class FullTableStream(BaseStream):
     ) -> Dict:
         """Abstract implementation for `type: Fulltable` stream."""
         self.url_endpoint = self.get_url_endpoint(parent_obj)
-        self.update_data_payload(parent_obj)
+        self.update_data_payload(parent_obj=parent_obj)
         with metrics.record_counter(self.tap_stream_id) as counter:
             for record in self.get_records():
                 transformed_record = transformer.transform(
@@ -291,12 +347,12 @@ class ChildBaseStream(IncrementalStream):
 
     def get_url_endpoint(self, parent_obj=None):
         """Prepare URL endpoint for child streams."""
-        return f"{self.client.base_url}/{self.path.format(parent_obj['id'])}"
+        return f"{self.client.base_url}/{self.path.format(log_id=parent_obj['id'])}"
 
     def get_bookmark(self, state: Dict, stream: str, key: Any = None) -> int:
         """Singleton bookmark value for child streams."""
-        if not self.bookmark_value:
+        # Disable pylint access-member-before-definition since bookmark_value is defined at runtime
+        if not self.bookmark_value:  # pylint: disable=access-member-before-definition
             self.bookmark_value = super().get_bookmark(state, stream)
 
         return self.bookmark_value
-
