@@ -1,13 +1,15 @@
 import unittest
-from unittest.mock import patch, MagicMock
-from tap_sendwithus.sync import write_schema, sync, update_currently_syncing
+from unittest.mock import MagicMock, patch
+
+from tap_sendwithus.sync import sync, update_currently_syncing, write_schema
+
 
 class TestSync(unittest.TestCase):
 
     def test_write_schema_only_parent_selected(self):
         mock_stream = MagicMock()
         mock_stream.is_selected.return_value = True
-        mock_stream.children = ["invoice_payments", "invoice_line_items"]
+        mock_stream.children = ["log_events"]
         mock_stream.child_to_sync = []
 
         client = MagicMock()
@@ -22,14 +24,14 @@ class TestSync(unittest.TestCase):
     def test_write_schema_parent_child_both_selected(self):
         mock_stream = MagicMock()
         mock_stream.is_selected.return_value = True
-        mock_stream.children = ["invoice_payments", "invoice_line_items"]
+        mock_stream.children = ["log_events"]
         mock_stream.child_to_sync = []
 
         client = MagicMock()
         catalog = MagicMock()
         catalog.get_stream.return_value = MagicMock()
 
-        write_schema(mock_stream, client, ["invoice_payments"], catalog)
+        write_schema(mock_stream, client, ["log_events"], catalog)
 
         mock_stream.write_schema.assert_called_once()
         self.assertEqual(len(mock_stream.child_to_sync), 1)
@@ -37,17 +39,17 @@ class TestSync(unittest.TestCase):
     def test_write_schema_child_selected(self):
         mock_stream = MagicMock()
         mock_stream.is_selected.return_value = False
-        mock_stream.children = ["invoice_payments", "invoice_line_items"]
+        mock_stream.children = ["log_events"]
         mock_stream.child_to_sync = []
 
         client = MagicMock()
         catalog = MagicMock()
         catalog.get_stream.return_value = MagicMock()
 
-        write_schema(mock_stream, client, ["invoice_payments", "invoice_line_items"], catalog)
+        write_schema(mock_stream, client, ["log_events"], catalog)
 
         self.assertEqual(mock_stream.write_schema.call_count, 0)
-        self.assertEqual(len(mock_stream.child_to_sync), 2)
+        self.assertEqual(len(mock_stream.child_to_sync), 1)
 
     @patch("singer.write_schema")
     @patch("singer.get_currently_syncing")
@@ -56,13 +58,14 @@ class TestSync(unittest.TestCase):
     @patch("tap_sendwithus.streams.abstracts.IncrementalStream.sync")
     def test_sync_stream1_called(self, mock_sync, mock_write_state, mock_transformer, mock_get_currently_syncing, mock_write_schema):
         mock_catalog = MagicMock()
-        invoice_stream = MagicMock()
-        invoice_stream.stream = "invoices"
-        expense_stream = MagicMock()
-        expense_stream.stream = "expenses"
+        templates_stream = MagicMock()
+        templates_stream.stream = "templates"
+        snippets_stream = MagicMock()
+        snippets_stream.stream = "snippets"
+
         mock_catalog.get_selected_streams.return_value = [
-            invoice_stream,
-            expense_stream
+            templates_stream,
+            snippets_stream
         ]
         state = {}
 
@@ -80,13 +83,13 @@ class TestSync(unittest.TestCase):
     @patch("tap_sendwithus.streams.abstracts.IncrementalStream.sync")
     def test_sync_child_selected(self, mock_sync, mock_write_state, mock_transformer, mock_get_currently_syncing, mock_write_schema):
         mock_catalog = MagicMock()
-        invoice_messages_stream = MagicMock()
-        invoice_messages_stream.stream = "invoice_messages"
-        invoice_payments_stream = MagicMock()
-        invoice_payments_stream.stream = "invoice_payments"
+        log_stream = MagicMock()
+        log_stream.stream = "logs"
+        log_events_stream = MagicMock()
+        log_events_stream.stream = "log_events"
         mock_catalog.get_selected_streams.return_value = [
-            invoice_messages_stream,
-            invoice_payments_stream
+            log_stream,
+            log_events_stream
         ]
         state = {}
 
@@ -109,7 +112,7 @@ class TestSync(unittest.TestCase):
         mock_get_currently_syncing.assert_called_once_with(state)
         mock_set_currently_syncing.assert_not_called()
         mock_write_state.assert_called_once_with(state)
-        self.assertNotIn("currently_syncing", state) 
+        self.assertNotIn("currently_syncing", state)
 
     @patch("singer.get_currently_syncing")
     @patch("singer.set_currently_syncing")
@@ -123,4 +126,4 @@ class TestSync(unittest.TestCase):
         mock_get_currently_syncing.assert_not_called()
         mock_set_currently_syncing.assert_called_once_with(state, "new_stream")
         mock_write_state.assert_called_once_with(state)
-        self.assertNotIn("currently_syncing", state) 
+        self.assertNotIn("currently_syncing", state)

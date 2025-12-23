@@ -1,6 +1,8 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from tap_sendwithus.streams.abstracts import IncrementalStream
+
 
 class ConcreteParentBaseStream(IncrementalStream):
     @property
@@ -18,6 +20,7 @@ class ConcreteParentBaseStream(IncrementalStream):
     @property
     def tap_stream_id(self):
         return "stream_1"
+
 
 class TestSync(unittest.TestCase):
     @patch("tap_sendwithus.streams.abstracts.metadata.to_map")

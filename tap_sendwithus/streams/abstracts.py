@@ -4,11 +4,9 @@ from typing import Any, Dict, Iterator, List, Tuple
 
 from singer import (Transformer, get_bookmark, get_logger, metadata, metrics,
                     write_bookmark, write_record, write_schema)
+from singer.transform import unix_seconds_to_datetime
 
-from tap_sendwithus.utils import (get_datetime_fields_from_schema,
-                                  get_datetime_from_timestamp,
-                                  get_timestamp_from_datetime,
-                                  sort_records_by_replication_key)
+from tap_sendwithus.utils import get_timestamp_from_datetime
 
 LOGGER = get_logger()
 
@@ -193,43 +191,15 @@ class IncrementalStream(BaseStream):
 
         LOGGER.info("Fetched {} records for stream {}".format(len(raw_records), self.tap_stream_id))
 
-        # Some APIs may not return records in order and we don't have control over that.
-        # Sort the records by replication key. This ensures that records are processed in order.
-        raw_records = sort_records_by_replication_key(raw_records, self.replication_keys[0])
-
         yield from raw_records
 
-    def modify_object(self, record, parent_record=None, datetime_fields: set = None):
-        """ Modify the record's datetime fields before writing to the stream
+    def modify_object(self, record, parent_record=None):
+        """ Modify the record before writing to the stream
 
         Args:
             record (Dict): The record to modify
             parent_record (Dict, optional): The parent record. Defaults to None.
-            datetime_fields (Set[str], optional): The set of datetime fields. Defaults to None.
         """
-        if datetime_fields is None:
-            datetime_fields = set()
-
-        # Iterate on the record and convert datetime fields to standard format
-        for field, value in record.items():
-            if field in datetime_fields and value is not None:
-                # Convert to standard datetime format
-                try:
-                    standardized_datetime = get_datetime_from_timestamp(value)
-                    record[field] = standardized_datetime
-                except Exception as e:
-                    LOGGER.error("Error converting field {} with value {}: {}".format(field, value, str(e)))
-                    record[field] = value  # Keep original value if conversion fails
-
-            elif isinstance(value, dict):
-                # Nested object, process recursively
-                self.modify_object(value, datetime_fields=datetime_fields)
-
-            elif isinstance(value, list):
-                # List of items, process each item
-                for item in value:
-                    if isinstance(item, dict):
-                        self.modify_object(item, datetime_fields=datetime_fields)
 
         if self.tap_stream_id == "log_events" and parent_record:
             # Add parent log_id to the child log_events record
@@ -243,27 +213,23 @@ class IncrementalStream(BaseStream):
     ) -> Dict:
         """Implementation for `type: Incremental` stream."""
         bookmark_date = self.get_bookmark(state, self.tap_stream_id)
-        current_max_bookmark_date = bookmark_date
-        current_max_bookmark_ts = get_timestamp_from_datetime(date_str=bookmark_date)
+        current_max_bookmark_ts = bookmark_ts = get_timestamp_from_datetime(date_str=bookmark_date)
 
         self.update_params(updated_since=bookmark_date)
         self.update_data_payload(parent_obj=parent_obj)
         self.url_endpoint = self.get_url_endpoint(parent_obj)
 
-        # Get all the datetime fields from the schema
-        datetime_fields = get_datetime_fields_from_schema(self.schema)
-
         with metrics.record_counter(self.tap_stream_id) as counter:
             for record in self.get_records():
-                self.modify_object(record, parent_obj, datetime_fields=datetime_fields)
+                self.modify_object(record, parent_obj)
+
+                record_bookmark_ts = record[self.replication_keys[0]]
+
                 transformed_record = transformer.transform(
                     record, self.schema, self.metadata
                 )
 
-                record_bookmark = transformed_record[self.replication_keys[0]]
-                record_bookmark_ts = get_timestamp_from_datetime(date_str=record_bookmark)
-
-                if record_bookmark_ts >= current_max_bookmark_ts:
+                if record_bookmark_ts >= bookmark_ts:
                     if self.is_selected():
                         write_record(self.tap_stream_id, transformed_record)
                         counter.increment()
@@ -275,7 +241,7 @@ class IncrementalStream(BaseStream):
                     for child in self.child_to_sync:
                         child.sync(state=state, transformer=transformer, parent_obj=record)
 
-            current_max_bookmark_date = get_datetime_from_timestamp(current_max_bookmark_ts)
+            current_max_bookmark_date = unix_seconds_to_datetime(current_max_bookmark_ts)
             state = self.write_bookmark(state, self.tap_stream_id, value=current_max_bookmark_date)
             return counter.value
 
@@ -385,7 +351,8 @@ class ChildBaseStream(IncrementalStream):
 
     def get_bookmark(self, state: Dict, stream: str, key: Any = None) -> int:
         """Singleton bookmark value for child streams."""
-        if not self.bookmark_value:
+        # Disable pylint access-member-before-definition since bookmark_value is defined at runtime
+        if not self.bookmark_value:  # pylint: disable=access-member-before-definition
             self.bookmark_value = super().get_bookmark(state, stream)
 
         return self.bookmark_value
