@@ -18,9 +18,9 @@ class SendwithusInterruptedSyncTest(InterruptedSyncTest, SendwithusBaseTest):
         return {
             "currently_syncing": "templates",
             "bookmarks": {
-                "templates": {"created": "2020-11-11T00:00:00Z"},
-                "logs": {"created": "2020-11-18T00:00:00Z"},
-                "log_events": {"created": "2020-11-18T00:00:00Z"},
-                "snippets": {"modified": "2020-11-11T06:25:22Z"},
+                "templates": {"created": "2020-11-11T00:00:00.000000Z"},
+                "logs": {"created": "2020-11-18T00:00:00.000000Z"},
+                "log_events": {"created": "2020-11-18T00:00:00.000000Z"},
+                "snippets": {"modified": "2020-11-11T06:25:22.000000Z"},
             }
         }
