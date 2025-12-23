@@ -25,7 +25,7 @@ class SendwithusStartDateTest(StartDateTest, SendwithusBaseTest):
 
     @property
     def start_date_2(self):
-        delta = timedelta(days=1)
+        delta = timedelta(hours=12)
         now_minus_1_day = (datetime.now(tz=timezone.utc) - delta).isoformat(timespec="seconds").replace("+00:00", "Z")
 
         return now_minus_1_day

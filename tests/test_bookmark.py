@@ -31,7 +31,7 @@ class SendwithusBookMarkTest(BookmarkTest, SendwithusBaseTest):
         # NOTE: The timestamps for logs and log_events needs to be updated since the test data will get deleted after 7 days.
         # If the test fails, create new logs and log_events by using the script `generate-logs-data.py` present in spikes
 
-        delta = timedelta(days=1)
+        delta = timedelta(hours=12)
         now_minus_1_day = (datetime.now(tz=timezone.utc) - delta).isoformat(timespec="seconds").replace("+00:00", "Z")
 
         new_bookmarks = {
