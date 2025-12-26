@@ -34,7 +34,7 @@ This tap:
 - Replication strategy: INCREMENTAL
 
 **[log_events](https://support.sendwithus.com/api/#retrieveeventsforaspecificlog_id.)**
-- Primary keys: ['status', 'created']
+- Primary keys: ['log_id', 'status', 'created']
 - Replication strategy: INCREMENTAL
 
 **[snippets](https://support.sendwithus.com/api/#getallsnippets)**
