@@ -1,0 +1,66 @@
+{
+    "type": "object",
+    "properties": {
+        "object": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "id": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "created": {
+            "type": [
+                "null",
+                "string"
+            ],
+            "format": "date-time"
+        },
+        "recipient_name": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "recipient_address": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "status": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "message": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "email_id": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "email_name": {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        "email_version": {
+            "type": [
+                "null",
+                "string"
+            ]
+        }
+    }
+}
