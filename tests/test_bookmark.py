@@ -30,14 +30,33 @@ class SendwithusBookMarkTest(BookmarkTest, SendwithusBaseTest):
         back data)"""
         # NOTE: The timestamps for logs and log_events needs to be updated since the test data will get deleted after 7 days.
         # If the test fails, create new logs and log_events by using the script `generate-logs-data.py` present in spikes
+        # Generate data 2 times with a gap of few mins between them to have consistent test results as start_date_2 is having a delta of 5 mins. 
 
-        delta = timedelta(hours=12)
-        now_minus_1_day = (datetime.now(tz=timezone.utc) - delta).isoformat().replace("+00:00", "Z")
+        lookback = timedelta(minutes=10)
+
+        def _subtract_lookback(stream, replication_key):
+            """Reads the max bookmark for a stream from sync 1 state
+            and subtracts the lookback window."""
+            state_bookmarks = (BookmarkTest.state_1 or {}).get("bookmarks", {})
+            raw = state_bookmarks.get(stream, {}).get(replication_key)
+            if raw:
+                bookmark_dt = datetime.strptime(
+                    raw, self.bookmark_format
+                ).replace(tzinfo=timezone.utc)
+                return (bookmark_dt - lookback).strftime(self.bookmark_format)
+            # Fallback: use now minus lookback if state is unavailable
+            return (
+                datetime.now(tz=timezone.utc) - lookback
+            ).strftime(self.bookmark_format)
 
         new_bookmarks = {
             "templates": {"created": "2025-11-11T00:00:00.000000Z"},
-            "logs": {"created": now_minus_1_day},
-            "log_events": {"created": now_minus_1_day},
+            "logs": {
+                "created": _subtract_lookback("logs", "created")
+            },
+            "log_events": {
+                "created": _subtract_lookback("log_events", "created")
+            },
             "snippets": {"modified": "2025-11-11T06:25:22.000000Z"},
         }
 
